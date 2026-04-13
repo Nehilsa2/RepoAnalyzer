@@ -1,14 +1,16 @@
 export default function RepoInput({ repoUrl, setRepoUrl, onFetch }) {
   return (
-    <div>
+    <div className="space-y-3">
       <input
         type="text"
-        placeholder="Enter GitHub Repo URL"
+        placeholder="https://github.com/owner/repository"
         value={repoUrl}
         onChange={(e) => setRepoUrl(e.target.value)}
-        style={{ width: "100%" }}
+        className="ui-input"
       />
-      <button onClick={onFetch}>Fetch Files</button>
+      <button onClick={onFetch} className="secondary-action w-full">
+        Fetch repository files
+      </button>
     </div>
   );
 }

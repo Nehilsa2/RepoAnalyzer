@@ -13,7 +13,7 @@ function filterFiles(tree) {
     .filter(item => item.type === 'blob')
     .map(item => item.path)
     .filter(isValidFile)
-    .slice(0, 10); // limit
+    .slice(0, 1); // limit
 }
 
 module.exports = filterFiles;

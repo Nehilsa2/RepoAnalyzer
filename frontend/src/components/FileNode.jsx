@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronRight, File, Folder } from "lucide-react";
 
 export default function FileNode({ name, node, path, selectedFiles, setSelectedFiles }) {
   const [open, setOpen] = useState(false);
@@ -6,7 +7,7 @@ export default function FileNode({ name, node, path, selectedFiles, setSelectedF
 
   const toggleSelect = () => {
     if (selectedFiles.includes(path)) {
-      setSelectedFiles(selectedFiles.filter(f => f !== path));
+      setSelectedFiles(selectedFiles.filter((file) => file !== path));
     } else {
       setSelectedFiles([...selectedFiles, path]);
     }
@@ -14,36 +15,47 @@ export default function FileNode({ name, node, path, selectedFiles, setSelectedF
 
   if (isFile) {
     return (
-      <div className="ml-4 flex items-center gap-2 hover:bg-gray-800 p-1 rounded">
+      <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/5 cursor-pointer transition-colors group">
         <input
           type="checkbox"
           checked={selectedFiles.includes(path)}
           onChange={toggleSelect}
+          className="w-4 h-4 rounded border border-white/20 bg-white/5 accent-blue-500 cursor-pointer"
         />
-        <span className="text-sm">📄 {name}</span>
-      </div>
+        <File className="w-4 h-4 text-white/40 group-hover:text-white/60" />
+        <span className="text-xs text-white/70 group-hover:text-white/90 truncate">{name}</span>
+      </label>
     );
   }
 
   return (
-    <div className="ml-2">
+    <div>
       <div
         onClick={() => setOpen(!open)}
-        className="cursor-pointer hover:bg-gray-800 p-1 rounded"
+        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 cursor-pointer transition-colors group"
       >
-        📂 {name}
+        <ChevronRight
+          className={`w-4 h-4 text-white/40 transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+        <Folder className="w-4 h-4 text-yellow-400/60 group-hover:text-yellow-400" />
+        <span className="text-xs font-medium text-white/80 group-hover:text-white truncate">
+          {name}
+        </span>
       </div>
 
       {open &&
-        Object.keys(node).map(child => (
-          <FileNode
-            key={child}
-            name={child}
-            node={node[child]}
-            path={`${path}/${child}`}
-            selectedFiles={selectedFiles}
-            setSelectedFiles={setSelectedFiles}
-          />
+        Object.keys(node).map((child) => (
+          <div key={child} className="ml-2">
+            <FileNode
+              name={child}
+              node={node[child]}
+              path={`${path}/${child}`}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+            />
+          </div>
         ))}
     </div>
   );
