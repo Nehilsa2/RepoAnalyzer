@@ -5,6 +5,10 @@ import RepositoryPanel from "../components/RepositoryPanel";
 import FileTreePanel from "../components/FileTreePanel";
 import AnalysisResultsPanel from "../components/AnalysisResultsPanel";
 import LoadingSpinner from "../components/LoadingSpinner";
+import WorkspaceBackground from "../components/workspace/WorkspaceBackground";
+import WorkspaceHeader from "../components/workspace/WorkspaceHeader";
+import WorkspaceIntroCard from "../components/workspace/WorkspaceIntroCard";
+import WorkspaceMotionStyles from "../components/workspace/WorkspaceMotionStyles";
 
 export default function Workspace() {
   const [searchParams] = useSearchParams();
@@ -59,55 +63,38 @@ export default function Workspace() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Header */}
-      <header className="border-b border-white/10 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg" />
-              <div>
-                <p className="text-xs text-white/50 uppercase tracking-wider">Analyzing</p>
-                <p className="text-sm font-semibold text-white truncate max-w-md">
-                  {repoUrl}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-white/50 uppercase tracking-wider">Progress</p>
-              <p className="text-sm font-semibold text-white">
-                {selectedFiles.length > 0 ? `${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''} selected` : 'No files selected'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="relative min-h-screen overflow-hidden bg-slate-950">
+      <WorkspaceBackground />
+      <div className="relative z-10">
+        <WorkspaceHeader
+          repoUrl={repoUrl}
+          selectedCount={selectedFiles.length}
+          resultCount={results ? results.length : 0}
+        />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+          <WorkspaceIntroCard repoUrl={repoUrl} />
+
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
             {error}
           </div>
         )}
 
-        <div className="grid lg:grid-cols-[380px_1fr_1fr] gap-6">
-          {/* Repository Panel */}
-          <RepositoryPanel repoUrl={repoUrl} onRefresh={handleFetch} />
-
-          {/* File Tree Panel */}
-          <FileTreePanel
-            tree={tree}
-            selectedFiles={selectedFiles}
-            setSelectedFiles={setSelectedFiles}
-            onAnalyze={handleAnalyze}
-            loading={loading}
-          />
-
-          {/* Analysis Results Panel */}
-          <AnalysisResultsPanel results={results} loading={loading} />
-        </div>
-      </main>
+          <div className="workspace-grid-enter mt-6 grid gap-6 lg:grid-cols-[320px_1fr_1fr]">
+            <RepositoryPanel repoUrl={repoUrl} onRefresh={handleFetch} />
+            <FileTreePanel
+              tree={tree}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              onAnalyze={handleAnalyze}
+              loading={loading}
+            />
+            <AnalysisResultsPanel results={results} loading={loading} />
+          </div>
+        </main>
+      </div>
+      <WorkspaceMotionStyles />
     </div>
   );
 }

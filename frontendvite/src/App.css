@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth scroll behavior */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom scrollbar */
+@layer utilities {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes brandPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0.25);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+  }
+}
+
+@keyframes brandShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.brand-logo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #0ea5e9, #22d3ee 55%, #a78bfa);
+  animation: brandPulse 2.8s ease-in-out infinite;
+}
+
+.brand-logo::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 0.7rem;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45), transparent 45%);
+}
+
+.brand-wordmark {
+  background: linear-gradient(90deg, #dbeafe, #67e8f9, #c4b5fd, #dbeafe);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brandShimmer 5.5s linear infinite;
+}
