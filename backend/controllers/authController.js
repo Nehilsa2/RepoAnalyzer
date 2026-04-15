@@ -48,17 +48,32 @@ const safeRedirectPath = (value) => {
   return value.startsWith('/') ? value : '/';
 };
 
+const getRequestOrigin = (req) => {
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'http';
+  const host = req.get('host');
+
+  return `${protocol}://${host}`;
+};
+
+const getOauthRedirectUri = (req) => {
+  const backendOrigin = (process.env.BACKEND_URL || getRequestOrigin(req)).replace(/\/$/, '');
+  return `${backendOrigin}/api/auth/github/callback`;
+};
+
 const githubLogin = (req, res) => {
   const redirect = safeRedirectPath(req.query.redirect);
   const frontendOrigin = sanitizeFrontendOrigin(req.query.frontendOrigin);
+  const redirectUri = getOauthRedirectUri(req);
   const state = Buffer.from(JSON.stringify({ redirect, frontendOrigin }), 'utf8').toString('base64url');
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo&state=${encodeURIComponent(state)}`;
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
   res.redirect(url);
 };
 
 const githubCallback = async (req, res) => {
   const { code, state } = req.query;
+  const redirectUri = getOauthRedirectUri(req);
 
   let redirectPath = '/';
   let frontendOrigin = FRONTEND_URL;
@@ -81,12 +96,17 @@ const githubCallback = async (req, res) => {
       {
         client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
-        code
+        code,
+        redirect_uri: redirectUri
       },
       {
         headers: { Accept: "application/json" }
       }
     );
+
+    if (tokenRes.data.error) {
+      return res.status(400).send(tokenRes.data.error_description || 'GitHub OAuth failed');
+    }
 
     const access_token = tokenRes.data.access_token;
 

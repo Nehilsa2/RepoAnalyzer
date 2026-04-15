@@ -7,6 +7,7 @@ const repoRoutes = require('./routes/repoRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 
 const connectDB = require("./config/db");
 connectDB();
