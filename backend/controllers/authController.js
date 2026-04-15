@@ -2,7 +2,43 @@ const axios = require('axios');
 const crypto = require('crypto');
 const User = require('../models/User');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://repo-analyzer-gamma.vercel.app').replace(/\/$/, '');
+const FRONTEND_URLS = [
+  FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => value.replace(/\/$/, '')),
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+];
+
+const isAllowedFrontendOrigin = (origin) => {
+  if (!origin) {
+    return false;
+  }
+
+  if (FRONTEND_URLS.includes(origin)) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(origin);
+    return parsed.protocol === 'https:' && parsed.hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+};
+
+const sanitizeFrontendOrigin = (value) => {
+  if (!value || typeof value !== 'string') {
+    return FRONTEND_URL;
+  }
+
+  const normalized = value.replace(/\/$/, '');
+  return isAllowedFrontendOrigin(normalized) ? normalized : FRONTEND_URL;
+};
 
 const safeRedirectPath = (value) => {
   if (!value || typeof value !== 'string') {
@@ -14,7 +50,8 @@ const safeRedirectPath = (value) => {
 
 const githubLogin = (req, res) => {
   const redirect = safeRedirectPath(req.query.redirect);
-  const state = Buffer.from(JSON.stringify({ redirect }), 'utf8').toString('base64url');
+  const frontendOrigin = sanitizeFrontendOrigin(req.query.frontendOrigin);
+  const state = Buffer.from(JSON.stringify({ redirect, frontendOrigin }), 'utf8').toString('base64url');
   const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo&state=${encodeURIComponent(state)}`;
 
   res.redirect(url);
@@ -24,13 +61,16 @@ const githubCallback = async (req, res) => {
   const { code, state } = req.query;
 
   let redirectPath = '/';
+  let frontendOrigin = FRONTEND_URL;
 
   if (state) {
     try {
       const parsedState = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
       redirectPath = safeRedirectPath(parsedState.redirect);
+      frontendOrigin = sanitizeFrontendOrigin(parsedState.frontendOrigin);
     } catch {
       redirectPath = '/';
+      frontendOrigin = FRONTEND_URL;
     }
   }
 
@@ -78,7 +118,7 @@ const githubCallback = async (req, res) => {
     );
 
     const queryJoiner = redirectPath.includes('?') ? '&' : '?';
-    const redirectTarget = `${FRONTEND_URL}${redirectPath}${queryJoiner}token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`;
+    const redirectTarget = `${frontendOrigin}${redirectPath}${queryJoiner}token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`;
 
     res.redirect(redirectTarget);
 
