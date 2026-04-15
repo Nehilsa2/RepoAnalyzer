@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WorkflowShowcase from "../components/WorkflowShowcase";
 import LandingBackground from "../components/landing/LandingBackground";
@@ -6,16 +6,102 @@ import LandingNav from "../components/landing/LandingNav";
 import LandingHero from "../components/landing/LandingHero";
 import LandingFeatures from "../components/landing/LandingFeatures";
 import LandingMotionStyles from "../components/landing/LandingMotionStyles";
+import { getCurrentUser, logout, startGithubLogin } from "../services/api";
+import { clearGithubAuth, getGithubUser, isGithubLoggedIn, saveGithubAuth } from "../services/auth";
 
 export default function Landing() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggedIn, setLoggedIn] = useState(isGithubLoggedIn());
+  const [githubUser, setGithubUser] = useState(getGithubUser());
+
+  useEffect(() => {
+    const bootstrapAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const user = params.get("user");
+
+      if (token) {
+        saveGithubAuth({ token, user });
+
+        params.delete("token");
+        params.delete("user");
+        const nextQuery = params.toString();
+        const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`;
+        window.history.replaceState({}, "", nextUrl);
+      }
+
+      if (!isGithubLoggedIn()) {
+        setLoggedIn(false);
+        setGithubUser(null);
+        return;
+      }
+
+      try {
+        const data = await getCurrentUser();
+        setLoggedIn(true);
+        setGithubUser(data.user?.username || getGithubUser());
+      } catch {
+        clearGithubAuth();
+        setLoggedIn(false);
+        setGithubUser(null);
+      }
+    };
+
+    bootstrapAuth();
+  }, []);
+
+  const workspaceRedirectPath = useMemo(() => {
+    if (!repoUrl.trim()) {
+      return "/workspace";
+    }
+
+    return `/workspace?repo=${encodeURIComponent(repoUrl.trim())}`;
+  }, [repoUrl]);
 
   const handleStart = (e) => {
     e.preventDefault();
+
+    if (!loggedIn) {
+      setLoginError("GitHub login is required before fetching any repository.");
+      return;
+    }
+
     if (repoUrl.trim()) {
       navigate(`/workspace?repo=${encodeURIComponent(repoUrl)}`);
+      return;
     }
+
+    navigate("/workspace");
+  };
+
+  const handleAnalyzeOwnRepos = () => {
+    if (!loggedIn) {
+      setLoginError("GitHub login is required before fetching any repository.");
+      return;
+    }
+
+    navigate("/workspace");
+  };
+
+  const handleLogin = () => {
+    setLoginError("");
+    startGithubLogin(workspaceRedirectPath);
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (isGithubLoggedIn()) {
+        await logout();
+      }
+    } catch {
+      // Ignore API logout failures and clear local session regardless.
+    }
+
+    clearGithubAuth();
+    setLoggedIn(false);
+    setGithubUser(null);
   };
 
   return (
@@ -23,17 +109,40 @@ export default function Landing() {
       <LandingBackground />
 
       <div className="relative z-10">
-        <LandingNav />
+        <LandingNav
+          isLoggedIn={loggedIn}
+          githubUser={githubUser}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
+        />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <LandingHero repoUrl={repoUrl} setRepoUrl={setRepoUrl} onSubmit={handleStart} />
+        <div className="mx-auto w-[min(96vw,1520px)] px-4 sm:px-6 lg:px-10">
+          <LandingHero
+            repoUrl={repoUrl}
+            setRepoUrl={setRepoUrl}
+            onSubmit={handleStart}
+            isLoggedIn={loggedIn}
+            onAnalyzeOwnRepos={handleAnalyzeOwnRepos}
+          />
+
+          {loginError && (
+            <div className="mt-5 rounded-xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+              <p>{loginError}</p>
+              <button
+                onClick={handleLogin}
+                className="mt-3 rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition hover:bg-amber-300/20"
+              >
+                Login with GitHub
+              </button>
+            </div>
+          )}
 
           <WorkflowShowcase />
           <LandingFeatures />
         </div>
 
         <div className="border-t border-white/10 backdrop-blur-md mt-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-white/50 text-sm">
+          <div className="mx-auto w-[min(96vw,1520px)] px-4 py-8 text-center text-white/50 text-sm sm:px-6 lg:px-10">
             <p>Built for developers who care about code quality</p>
           </div>
         </div>

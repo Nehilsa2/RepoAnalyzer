@@ -14,26 +14,34 @@ const analyzeCode = async (code) =>{
             messages: [
         {
           role: "system",
-          content: "You are a senior software engineer who analyzes code."
+          content: "You are a senior software engineer who performs practical bug and reliability analysis for source code. Always return valid JSON only."
         },
         {
           role: "user",
           content: `
-You are a senior software engineer.
-
-Analyze the following code and return STRICT JSON ONLY.
+Analyze the code and return STRICT JSON.
 
 Rules:
-- Do NOT include markdown
-- Do NOT include explanations outside JSON
-- Complexity must be in Big-O format like "O(n)", "O(1)"
+- Max 5 issues per file
+- Focus on bugs and reliability risks
+- Avoid repetition
+- Include a concrete fix suggestion for every issue
+- Provide a short 2-3 sentence summary for every file
 
 Format:
 {
-  "bugs": ["..."],
-  "code_smells": ["..."],
-  "suggestions": ["..."],
-  "complexity": "O(n)"
+  "files": [
+    {
+      "fileName": "",
+      "summary": "",
+      "issues": [
+        {
+          "message": "",
+          "fix": ""
+        }
+      ]
+    }
+  ]
 }
 
 Code:
@@ -53,10 +61,7 @@ ${code}
         console.error("AI Error:", err.message);
 
         return {
-            bugs: [],
-            code_smells: [],
-            suggestions: ["AI failed to analyze"],
-            complexity:"Unknown"
+        files: []
         };
     }
 }

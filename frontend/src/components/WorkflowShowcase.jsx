@@ -1,7 +1,7 @@
 export default function WorkflowShowcase() {
   return (
     <section className="mt-16 text-left">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-white/15 bg-slate-950/70 p-4 shadow-2xl shadow-blue-900/20 backdrop-blur-md sm:p-6">
+      <div className="w-full rounded-2xl border border-white/15 bg-slate-950/70 p-5 shadow-2xl shadow-blue-900/20 backdrop-blur-md sm:p-6 lg:p-7">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-blue-300/80">Live Preview</p>

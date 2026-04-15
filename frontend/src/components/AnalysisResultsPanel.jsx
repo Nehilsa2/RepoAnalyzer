@@ -1,6 +1,24 @@
-import { AlertCircle, AlertTriangle, Lightbulb, CheckCircle, Loader } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertCircle, CheckCircle, ChevronDown, Loader, Wrench } from "lucide-react";
 
-export default function AnalysisResultsPanel({ results, loading }) {
+export default function AnalysisResultsPanel({
+  results,
+  loading,
+  onRaiseIssues,
+  raisingIssues,
+  canRaiseIssues,
+  issuePermissionMessage,
+}) {
+  const [openFileName, setOpenFileName] = useState(null);
+
+  useEffect(() => {
+    setOpenFileName(null);
+  }, [results]);
+
+  const toggleFile = (fileName) => {
+    setOpenFileName((prev) => (prev === fileName ? null : fileName));
+  };
+
   if (loading) {
     return (
       <div className="rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-6 flex items-center justify-center h-96">
@@ -28,91 +46,93 @@ export default function AnalysisResultsPanel({ results, loading }) {
 
   return (
     <div className="rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-6 flex flex-col">
-      <h2 className="text-lg font-semibold text-white mb-4">Analysis Results</h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-white">Analysis Results</h2>
+        <button
+          onClick={onRaiseIssues}
+          disabled={!results || results.length === 0 || raisingIssues || !canRaiseIssues}
+          className="rounded-md border border-cyan-300/35 bg-cyan-400/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-100 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {raisingIssues ? "Raising..." : "Raise Issues on GitHub"}
+        </button>
+      </div>
+
+      {!canRaiseIssues && issuePermissionMessage ? (
+        <p className="mb-4 rounded-md border border-amber-300/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+          {issuePermissionMessage}
+        </p>
+      ) : null}
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">
         {results.map((file, idx) => (
-          <ResultCard key={idx} file={file} />
+          <ResultCard
+            key={idx}
+            file={file}
+            open={openFileName === file.fileName}
+            onToggle={() => toggleFile(file.fileName)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function ResultCard({ file }) {
-  const analysis = file.analysis;
+function ResultCard({ file, open, onToggle }) {
+  const summary = file.summary || file.analysis?.summary;
+  const issues = Array.isArray(file.issues)
+    ? file.issues
+    : Array.isArray(file.analysis?.issues)
+      ? file.analysis.issues
+      : [];
 
   return (
     <div className="rounded-lg bg-white/5 border border-white/10 p-4 hover:border-white/20 transition-colors">
-      <div className="flex items-start justify-between mb-4">
+      <button type="button" onClick={onToggle} className="flex w-full items-start justify-between gap-3 text-left">
         <div>
           <p className="text-xs text-white/50 uppercase tracking-wider">File</p>
-          <p className="text-sm font-semibold text-white mt-1 break-all">
-            {file.fileName}
-          </p>
+          <p className="text-sm font-semibold text-white mt-1 break-all">{file.fileName}</p>
+          <p className="mt-2 text-xs text-white/65 leading-relaxed">{summary}</p>
         </div>
-        <span className="px-2 py-1 rounded bg-white/10 text-xs text-white/70">
-          {analysis.complexity || "Standard"}
-        </span>
-      </div>
 
-      <div className="space-y-3">
-        {analysis.bugs && analysis.bugs.length > 0 && (
-          <ResultSection
-            title="Bugs"
-            items={analysis.bugs}
-            icon={<AlertCircle className="w-4 h-4" />}
-            tone="danger"
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-1 rounded bg-white/10 text-xs text-white/70 whitespace-nowrap">
+            {issues.length} issue{issues.length === 1 ? "" : "s"}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 text-white/65 transition-transform ${open ? "rotate-180" : "rotate-0"}`}
           />
-        )}
-        {analysis.code_smells && analysis.code_smells.length > 0 && (
-          <ResultSection
-            title="Code Smells"
-            items={analysis.code_smells}
-            icon={<AlertTriangle className="w-4 h-4" />}
-            tone="warning"
-          />
-        )}
-        {analysis.suggestions && analysis.suggestions.length > 0 && (
-          <ResultSection
-            title="Suggestions"
-            items={analysis.suggestions}
-            icon={<Lightbulb className="w-4 h-4" />}
-            tone="info"
-          />
-        )}
-        {(!analysis.bugs || analysis.bugs.length === 0) &&
-          (!analysis.code_smells || analysis.code_smells.length === 0) &&
-          (!analysis.suggestions || analysis.suggestions.length === 0) && (
+        </div>
+      </button>
+
+      {open ? (
+        <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+          {issues.length === 0 ? (
             <div className="text-center py-3">
               <p className="text-xs text-white/50">No issues found ✓</p>
             </div>
+          ) : (
+            issues.map((issue, idx) => <IssueCard key={idx} issue={issue} />)
           )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function ResultSection({ title, items, icon, tone }) {
-  const toneColors = {
-    danger: "text-red-400",
-    warning: "text-yellow-400",
-    info: "text-blue-400",
-  };
-
+function IssueCard({ issue }) {
   return (
-    <div className="py-2 border-b border-white/5 last:border-0">
-      <p className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-2 ${toneColors[tone]}`}>
-        {icon}
-        {title}
+    <div className="rounded-md border border-red-300/20 bg-red-500/10 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-200 flex items-center gap-2">
+        <AlertCircle className="h-3.5 w-3.5" />
+        Bug
       </p>
-      <ul className="mt-2 space-y-1">
-        {items.map((item, idx) => (
-          <li key={idx} className="text-xs text-white/70 leading-relaxed">
-            • {item}
-          </li>
-        ))}
-      </ul>
+      <p className="mt-2 text-sm text-white/85 leading-relaxed">{issue?.message}</p>
+
+      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-200 flex items-center gap-2">
+        <Wrench className="h-3.5 w-3.5" />
+        Suggested Fix
+      </p>
+      <p className="mt-1 text-sm text-white/80 leading-relaxed">{issue?.fix}</p>
     </div>
   );
 }

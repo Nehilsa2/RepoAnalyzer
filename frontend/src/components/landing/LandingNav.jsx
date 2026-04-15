@@ -1,9 +1,9 @@
 import { Globe, Zap } from "lucide-react";
 
-export default function LandingNav() {
+export default function LandingNav({ isLoggedIn, githubUser, onLogin, onLogout }) {
   return (
     <nav className="border-b border-white/10 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-[min(96vw,1520px)] items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
         <div className="flex items-center gap-3">
           <div className="brand-logo flex h-10 w-10 items-center justify-center shadow-lg shadow-cyan-500/30">
             <Zap className="relative z-10 h-5 w-5 text-white" />
@@ -13,9 +13,30 @@ export default function LandingNav() {
             <p className="text-xs uppercase tracking-[0.2em] text-white/45">Repo Intelligence</p>
           </div>
         </div>
-        <a href="https://github.com" className="rounded-full border border-white/15 p-2 text-white/70 transition hover:border-white/30 hover:text-white">
-          <Globe className="h-5 w-5" />
-        </a>
+        <div className="flex items-center gap-3">
+          <a href="https://github.com" className="rounded-full border border-white/15 p-2 text-white/70 transition hover:border-white/30 hover:text-white">
+            <Globe className="h-5 w-5" />
+          </a>
+
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-[0.16em] text-white/60">{githubUser || "Connected"}</span>
+              <button
+                onClick={onLogout}
+                className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 transition hover:border-white/35 hover:text-white"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onLogin}
+              className="rounded-full border border-cyan-300/35 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-300/20"
+            >
+              Login with GitHub
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

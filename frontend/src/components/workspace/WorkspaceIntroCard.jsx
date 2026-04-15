@@ -1,6 +1,6 @@
 import { BadgeCheck, Bot, SearchCode } from "lucide-react";
 
-export default function WorkspaceIntroCard({ repoUrl }) {
+export default function WorkspaceIntroCard({ repoUrl, githubUser, repoCount }) {
   return (
     <section className="workspace-enter rounded-2xl border border-white/15 bg-slate-900/70 p-5 shadow-2xl shadow-cyan-900/20 backdrop-blur-md">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -10,6 +10,9 @@ export default function WorkspaceIntroCard({ repoUrl }) {
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">
             Your workspace is ready. Choose high-impact files from the tree and generate a focused,
             actionable analysis report for {repoUrl ? "this repository" : "your project"}.
+          </p>
+          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/45">
+            {githubUser ? `Logged in as ${githubUser}` : "Not logged in"} • {repoCount} accessible repositories
           </p>
         </div>
 

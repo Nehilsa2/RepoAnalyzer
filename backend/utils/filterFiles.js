@@ -1,21 +1,42 @@
-const allowedExtensions = ['.js', '.py', '.cpp'];
-const allowedDirs = ['src/', 'app/', 'lib/'];
+const allowedExtensions = [
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.py',
+  '.java',
+  '.go',
+  '.rb',
+  '.php',
+  '.cs',
+  '.cpp',
+  '.c',
+  '.h',
+  '.hpp',
+  '.rs'
+];
+
+const excludedPathSegments = [
+  'node_modules/',
+  'dist/',
+  'build/',
+  '.next/',
+  'coverage/',
+  '.git/'
+];
+
+const isExcludedPath = (path) => excludedPathSegments.some((segment) => path.includes(segment));
 
 function isValidFile(path) {
-  return (
-    allowedExtensions.some(ext => path.endsWith(ext)) &&
-    allowedDirs.some(dir => path.startsWith(dir))
-  );
+  return allowedExtensions.some((ext) => path.endsWith(ext)) && !isExcludedPath(path);
 }
 
 function filterFiles(tree) {
   return tree
-    .filter(item => item.type === 'blob')
-    .map(item => item.path)
+    .filter((item) => item.type === 'blob')
+    .map((item) => item.path)
     .filter(isValidFile)
-    .slice(0, 1) // limit
-    .sort((a, b) => size(b) - size(a)) // large files first
-    .slice(0, 5);
+    .slice(0, 300);
 }
 
 module.exports = filterFiles;

@@ -1,7 +1,21 @@
 const parseRepoUrl = require('../utils/parseRepo');
 const filterFiles = require('../utils/filterFiles');
 const buildFileTree = require('../utils/buildTree');
-const { getRepoTree } = require('../services/githubService');
+const { getRepoTree, getUserRepos, getRepoAccess } = require('../services/githubService');
+
+const getMyRepos = async (req, res) => {
+  try {
+    const repos = await getUserRepos(req.githubToken);
+
+    return res.json({
+      totalRepos: repos.length,
+      repos
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Error fetching user repositories' });
+  }
+};
 
 const getRepoFiles = async (req, res) => {
   try {
@@ -9,14 +23,18 @@ const getRepoFiles = async (req, res) => {
 
     const { owner, repo } = parseRepoUrl(repoUrl);
 
-    const tree = await getRepoTree(owner, repo);
+    const [tree, access] = await Promise.all([
+      getRepoTree(owner, repo, req.githubToken),
+      getRepoAccess(owner, repo, req.githubToken)
+    ]);
     const files = filterFiles(tree);
 
     const fileTree = buildFileTree(files);
 
     return res.json({
       tree: fileTree,
-      totalFiles: files.length
+      totalFiles: files.length,
+      access
     });
 
   } catch (error) {
@@ -25,4 +43,4 @@ const getRepoFiles = async (req, res) => {
   }
 };
 
-module.exports = { getRepoFiles };
+module.exports = { getRepoFiles, getMyRepos };
