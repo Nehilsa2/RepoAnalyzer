@@ -7,7 +7,8 @@ const isLocalFrontend =
   typeof window !== "undefined" &&
   ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
-const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim();
+const configuredApiBase =
+  import.meta.env.VITE_API_BASE_URL?.trim()
 const selectedBase = configuredApiBase || (isLocalFrontend ? LOCAL_API_BASE_URL : DEPLOYED_API_BASE_URL);
 
 export const BASE_URL = selectedBase.endsWith("/api") ? selectedBase : `${selectedBase}/api`;
