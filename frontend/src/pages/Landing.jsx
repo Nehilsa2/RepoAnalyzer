@@ -58,6 +58,21 @@ export default function Landing() {
     };
 
     bootstrapAuth();
+
+    const handlePageShow = (event) => {
+      const navigationEntry = performance.getEntriesByType("navigation")[0];
+      const isBackForward = navigationEntry && navigationEntry.type === "back_forward";
+
+      if (event.persisted || isBackForward) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }, []);
 
   const loginHref = useMemo(() => buildGithubLoginHref(), []);
