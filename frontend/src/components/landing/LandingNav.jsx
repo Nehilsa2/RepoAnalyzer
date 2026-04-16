@@ -7,7 +7,7 @@ export default function LandingNav({ isLoggedIn, githubUser, onLogin, onLogout }
       <div className="mx-auto flex w-[min(96vw,1520px)] items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label="Go to home page">
           <div className="brand-logo flex h-10 w-10 items-center justify-center shadow-lg shadow-cyan-500/30">
-            <img src="/logo.png" alt="RepoAnalyzer logo" className="relative z-10 h-7 w-7 object-contain" />
+            <img src="/favicon.png" alt="RepoAnalyzer logo" className="relative z-10 h-7 w-7 object-contain" />
           </div>
           <div>
             <p className="brand-wordmark text-lg font-semibold tracking-tight">RepoAnalyzer AI</p>
