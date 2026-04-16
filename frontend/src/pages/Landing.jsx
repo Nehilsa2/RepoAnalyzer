@@ -127,6 +127,7 @@ export default function Landing() {
               <p>{loginError}</p>
               <a
                 href={loginHref}
+                target="_top"
                 className="mt-3 inline-block rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition hover:bg-amber-300/20"
               >
                 Login with GitHub

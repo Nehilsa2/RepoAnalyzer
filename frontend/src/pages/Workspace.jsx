@@ -266,6 +266,7 @@ export default function Workspace() {
             {!isLoggedIn && (
               <a
                 href={loginHref}
+                target="_top"
                 className="ml-4 rounded-md border border-red-300/30 bg-red-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition hover:bg-red-300/20"
               >
                 Login with GitHub

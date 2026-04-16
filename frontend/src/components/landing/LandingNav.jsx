@@ -32,6 +32,7 @@ export default function LandingNav({ isLoggedIn, githubUser, loginHref, onLogout
           ) : (
             <a
               href={loginHref}
+              target="_top"
               className="rounded-full border border-cyan-300/35 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-300/20"
             >
               Login with GitHub
