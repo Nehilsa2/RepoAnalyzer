@@ -21,14 +21,22 @@ export default function Landing() {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("token");
       const user = params.get("user");
+      const shouldRefreshAfterAuth = params.get("auth") === "1";
 
       if (token) {
         saveGithubAuth({ token, user });
 
         params.delete("token");
         params.delete("user");
+        params.delete("auth");
         const nextQuery = params.toString();
-        const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`;
+        const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}` || "/";
+
+        if (shouldRefreshAfterAuth) {
+          window.location.replace(nextUrl);
+          return;
+        }
+
         window.history.replaceState({}, "", nextUrl);
       }
 

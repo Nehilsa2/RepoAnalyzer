@@ -197,7 +197,7 @@ const githubCallback = async (req, res) => {
 
     const frontendBaseUrl = (process.env.FRONTEND_URL || FRONTEND_URL).replace(/\/$/, '');
     res.redirect(
-      `${frontendBaseUrl}/workspace?token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`
+      `${frontendBaseUrl}/?token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}&auth=1`
     );
 
   } catch (err) {
