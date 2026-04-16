@@ -49,14 +49,23 @@ const safeRedirectPath = (value) => {
 };
 
 const getRequestOrigin = (req) => {
-  const forwardedProto = (req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
-  const protocol = forwardedProto || req.protocol || 'http';
-  const host = req.get('host');
-
+  // Handle x-forwarded-proto header from reverse proxies (Render, Heroku, etc.)
+  let protocol = req.protocol || 'http';
+  
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  if (forwardedProto) {
+    // Get the first protocol if there are multiple (comma-separated)
+    protocol = forwardedProto.split(',')[0].trim();
+  }
+  
+  // Use x-forwarded-host if available (for proxied requests)
+  let host = req.get('x-forwarded-host') || req.get('host');
+  
   return `${protocol}://${host}`;
 };
 
 const getOauthRedirectUri = (req) => {
+  // Explicitly set BACKEND_URL in environment, or fallback to derived origin
   const backendOrigin = (process.env.BACKEND_URL || getRequestOrigin(req)).replace(/\/$/, '');
   return `${backendOrigin}/api/auth/github/callback`;
 };
