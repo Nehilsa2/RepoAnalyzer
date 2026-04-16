@@ -1,7 +1,7 @@
 import { Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function LandingNav({ isLoggedIn, githubUser, onLogin, onLogout }) {
+export default function LandingNav({ isLoggedIn, githubUser, loginHref, onLogout }) {
   return (
     <nav className="border-b border-white/10 backdrop-blur-md">
       <div className="mx-auto flex w-[min(96vw,1520px)] items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
@@ -30,12 +30,12 @@ export default function LandingNav({ isLoggedIn, githubUser, onLogin, onLogout }
               </button>
             </div>
           ) : (
-            <button
-              onClick={onLogin}
+            <a
+              href={loginHref}
               className="rounded-full border border-cyan-300/35 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-300/20"
             >
               Login with GitHub
-            </button>
+            </a>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { analyzeFiles, getCurrentUser, getMyRepos, getRepoFiles, logout, raiseIssues, startGithubLogin } from "../services/api";
+import { analyzeFiles, buildGithubLoginHref, getCurrentUser, getMyRepos, getRepoFiles, logout, raiseIssues } from "../services/api";
 import RepositoryPanel from "../components/RepositoryPanel";
 import FileTreePanel from "../components/FileTreePanel";
 import AnalysisResultsPanel from "../components/AnalysisResultsPanel";
@@ -200,13 +200,9 @@ export default function Workspace() {
     }
   };
 
-  const handleLogin = () => {
-    const redirectPath = repoUrl
-      ? `/workspace?repo=${encodeURIComponent(repoUrl)}`
-      : "/workspace";
-
-    startGithubLogin(redirectPath);
-  };
+  const loginHref = buildGithubLoginHref(
+    repoUrl ? `/workspace?repo=${encodeURIComponent(repoUrl)}` : "/workspace"
+  );
 
   const handleLogout = async () => {
     try {
@@ -268,12 +264,12 @@ export default function Workspace() {
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
             {error}
             {!isLoggedIn && (
-              <button
-                onClick={handleLogin}
+              <a
+                href={loginHref}
                 className="ml-4 rounded-md border border-red-300/30 bg-red-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] transition hover:bg-red-300/20"
               >
                 Login with GitHub
-              </button>
+              </a>
             )}
           </div>
         )}

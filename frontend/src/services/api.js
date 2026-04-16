@@ -10,9 +10,11 @@ const isLocalFrontend =
 const configuredApiBase =
   import.meta.env.VITE_API_BASE_URL?.trim()
 const selectedBase = configuredApiBase || (isLocalFrontend ? LOCAL_API_BASE_URL : DEPLOYED_API_BASE_URL);
+const authApiOrigin =
+  import.meta.env.VITE_API_URL?.trim() ||
+  (selectedBase.endsWith("/api") ? selectedBase.slice(0, -4) : selectedBase);
 
 export const BASE_URL = selectedBase.endsWith("/api") ? selectedBase : `${selectedBase}/api`;
-
 const buildHeaders = () => {
   const token = getSessionToken();
 
@@ -38,6 +40,11 @@ const parseJsonOrThrow = async (res) => {
 export const startGithubLogin = (redirectPath = "/") => {
   const frontendOrigin = typeof window !== "undefined" ? window.location.origin : "";
   window.location.href = `${BASE_URL}/auth/github?redirect=${encodeURIComponent(redirectPath)}&frontendOrigin=${encodeURIComponent(frontendOrigin)}`;
+};
+
+export const buildGithubLoginHref = (redirectPath = "/") => {
+  const frontendOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${authApiOrigin}/api/auth/github?redirect=${encodeURIComponent(redirectPath)}&frontendOrigin=${encodeURIComponent(frontendOrigin)}`;
 };
 
 export const getCurrentUser = async () => {

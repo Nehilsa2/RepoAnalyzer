@@ -71,59 +71,108 @@ const getOauthRedirectUri = (req) => {
 };
 
 const githubLogin = (req, res) => {
-  const redirect = safeRedirectPath(req.query.redirect);
-  const frontendOrigin = sanitizeFrontendOrigin(req.query.frontendOrigin);
-  const redirectUri = getOauthRedirectUri(req);
-  const state = Buffer.from(JSON.stringify({ redirect, frontendOrigin }), 'utf8').toString('base64url');
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const redirectUri = `${process.env.BACKEND_URL}/api/auth/github/callback`;
+
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo&redirect_uri=${redirectUri}`;
 
   res.redirect(url);
 };
 
+// const githubCallback = async (req, res) => {
+//   const { code, state } = req.query;
+//   const redirectUri = getOauthRedirectUri(req);
+
+//   let redirectPath = '/';
+//   let frontendOrigin = FRONTEND_URL;
+
+//   if (state) {
+//     try {
+//       const parsedState = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+//       redirectPath = safeRedirectPath(parsedState.redirect);
+//       frontendOrigin = sanitizeFrontendOrigin(parsedState.frontendOrigin);
+//     } catch {
+//       redirectPath = '/';
+//       frontendOrigin = FRONTEND_URL;
+//     }
+//   }
+
+//   try {
+//     // exchange code for token
+//     const tokenRes = await axios.post(
+//       "https://github.com/login/oauth/access_token",
+//       {
+//         client_id: process.env.GITHUB_CLIENT_ID,
+//         client_secret: process.env.GITHUB_CLIENT_SECRET,
+//         code,
+//         redirect_uri: redirectUri
+//       },
+//       {
+//         headers: { Accept: "application/json" }
+//       }
+//     );
+
+//     if (tokenRes.data.error) {
+//       return res.status(400).send(tokenRes.data.error_description || 'GitHub OAuth failed');
+//     }
+
+//     const access_token = tokenRes.data.access_token;
+
+//     if (!access_token) {
+//       return res.status(400).send('GitHub token not received');
+//     }
+
+//     // get user info
+//     const userRes = await axios.get(
+//       "https://api.github.com/user",
+//       {
+//         headers: {
+//           Authorization: `token ${access_token}`
+//         }
+//       }
+//     );
+
+//     const sessionToken = crypto.randomBytes(32).toString('hex');
+
+//     const savedUser = await User.findOneAndUpdate(
+//       { githubId: String(userRes.data.id) },
+//       {
+//         githubId: String(userRes.data.id),
+//         username: userRes.data.login,
+//         accessToken: access_token,
+//         sessionToken
+//       },
+//       { new: true, upsert: true }
+//     );
+
+//     const queryJoiner = redirectPath.includes('?') ? '&' : '?';
+//     const redirectTarget = `${frontendOrigin}${redirectPath}${queryJoiner}token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`;
+
+//     res.redirect(redirectTarget);
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send("Auth failed");
+//   }
+// };
+
 const githubCallback = async (req, res) => {
-  const { code, state } = req.query;
-  const redirectUri = getOauthRedirectUri(req);
-
-  let redirectPath = '/';
-  let frontendOrigin = FRONTEND_URL;
-
-  if (state) {
-    try {
-      const parsedState = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
-      redirectPath = safeRedirectPath(parsedState.redirect);
-      frontendOrigin = sanitizeFrontendOrigin(parsedState.frontendOrigin);
-    } catch {
-      redirectPath = '/';
-      frontendOrigin = FRONTEND_URL;
-    }
-  }
+  const { code } = req.query;
 
   try {
-    // exchange code for token
     const tokenRes = await axios.post(
       "https://github.com/login/oauth/access_token",
       {
         client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
-        code,
-        redirect_uri: redirectUri
+        code
       },
       {
         headers: { Accept: "application/json" }
       }
     );
 
-    if (tokenRes.data.error) {
-      return res.status(400).send(tokenRes.data.error_description || 'GitHub OAuth failed');
-    }
-
     const access_token = tokenRes.data.access_token;
 
-    if (!access_token) {
-      return res.status(400).send('GitHub token not received');
-    }
-
-    // get user info
     const userRes = await axios.get(
       "https://api.github.com/user",
       {
@@ -146,10 +195,9 @@ const githubCallback = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    const queryJoiner = redirectPath.includes('?') ? '&' : '?';
-    const redirectTarget = `${frontendOrigin}${redirectPath}${queryJoiner}token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`;
+    const FRONTEND_URL = process.env.FRONTEND_URL;
 
-    res.redirect(redirectTarget);
+    res.redirect(`${FRONTEND_URL}/auth-success?token=${sessionToken}&user=${savedUser.username}`);
 
   } catch (err) {
     console.error(err);

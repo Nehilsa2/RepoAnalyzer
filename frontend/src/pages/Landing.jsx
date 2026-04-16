@@ -6,7 +6,7 @@ import LandingNav from "../components/landing/LandingNav";
 import LandingHero from "../components/landing/LandingHero";
 import LandingFeatures from "../components/landing/LandingFeatures";
 import LandingMotionStyles from "../components/landing/LandingMotionStyles";
-import { getCurrentUser, logout, startGithubLogin } from "../services/api";
+import { buildGithubLoginHref, getCurrentUser, logout } from "../services/api";
 import { clearGithubAuth, getGithubUser, isGithubLoggedIn, saveGithubAuth } from "../services/auth";
 
 export default function Landing() {
@@ -60,6 +60,8 @@ export default function Landing() {
     return `/workspace?repo=${encodeURIComponent(repoUrl.trim())}`;
   }, [repoUrl]);
 
+  const loginHref = useMemo(() => buildGithubLoginHref(workspaceRedirectPath), [workspaceRedirectPath]);
+
   const handleStart = (e) => {
     e.preventDefault();
 
@@ -85,11 +87,6 @@ export default function Landing() {
     navigate("/workspace");
   };
 
-  const handleLogin = () => {
-    setLoginError("");
-    startGithubLogin(workspaceRedirectPath);
-  };
-
   const handleLogout = async () => {
     try {
       if (isGithubLoggedIn()) {
@@ -112,7 +109,7 @@ export default function Landing() {
         <LandingNav
           isLoggedIn={loggedIn}
           githubUser={githubUser}
-          onLogin={handleLogin}
+          loginHref={loginHref}
           onLogout={handleLogout}
         />
 
@@ -128,12 +125,12 @@ export default function Landing() {
           {loginError && (
             <div className="mt-5 rounded-xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
               <p>{loginError}</p>
-              <button
-                onClick={handleLogin}
-                className="mt-3 rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition hover:bg-amber-300/20"
+              <a
+                href={loginHref}
+                className="mt-3 inline-block rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition hover:bg-amber-300/20"
               >
                 Login with GitHub
-              </button>
+              </a>
             </div>
           )}
 
