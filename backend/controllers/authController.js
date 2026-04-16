@@ -195,9 +195,10 @@ const githubCallback = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    const FRONTEND_URL = process.env.FRONTEND_URL;
-
-    res.redirect(`${FRONTEND_URL}/auth-success?token=${sessionToken}&user=${savedUser.username}`);
+    const frontendBaseUrl = (process.env.FRONTEND_URL || FRONTEND_URL).replace(/\/$/, '');
+    res.redirect(
+      `${frontendBaseUrl}/workspace?token=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(savedUser.username)}`
+    );
 
   } catch (err) {
     console.error(err);
